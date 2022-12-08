@@ -20,6 +20,21 @@ from opentelemetry.instrumentation.sqlite3 import SQLite3Instrumentor
 from opentelemetry.test.test_base import TestBase
 
 
+class Data:
+    def __init__(self):
+        self._connection = sqlite3.connect(":memory:")
+        self._cursor = self._connection.cursor()
+
+    def __del__(self):
+        self._cursor.close()
+        self._connection.close()
+
+    def create_tables(self):
+        stmt = "CREATE TABLE IF NOT EXISTS test (id integer)"
+        self._cursor.execute(stmt)
+        self._connection.commit()
+
+
 class TestSQLite3(TestBase):
     def setUp(self):
         super().setUp()
@@ -100,3 +115,7 @@ class TestSQLite3(TestBase):
         ):
             self._cursor.callproc("test", ())
             self.validate_spans("test")
+
+    def test_baseinit(self):
+        data = Data()
+        data.create_tables()
